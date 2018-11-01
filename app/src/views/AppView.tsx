@@ -114,16 +114,19 @@ interface MenuBlockProps {
 }
 
 const _menublockViewStyle = {
+    layout :  RX.Styles.createViewStyle({
+		margin: 120
+    }),
     base: RX.Styles.createViewStyle({
 		flex: 1,
-		margin: 120
     })
 }
 
 const _menublockTextStyle = {
     base: RX.Styles.createTextStyle({
         fontFamily: "Hack",
-        color: "#FFD29D"
+        color: "#FFD29D",
+        fontSize: 20
     })
 }
 
@@ -139,6 +142,8 @@ class MenuBlock extends RX.Component<MenuBlockProps, RX.Stateless> {
 	private _animation: RX.Types.Animated.CompositeAnimation;
 	private _animationStyle: RX.Types.AnimatedViewStyleRuleSet;
 	private _rotateValue: RX.Animated.Value;
+    private _active = false;
+
     constructor(props: MenuBlockProps) {
         super(props);
 		this._rotateValue = new RX.Animated.Value(0);
@@ -149,45 +154,50 @@ class MenuBlock extends RX.Component<MenuBlockProps, RX.Stateless> {
 				}
 			]
 		})
-		this._animation = RX.Animated.timing(
+		this._animation = this._makeAnimation()
+	}
+
+    private _makeAnimation() {
+        return RX.Animated.timing(
 			this._rotateValue,
 			{
-				toValue: 90,
+                toValue: this._active ? 0 : 90 ,
 				duration: 250,
 				easing: RX.Animated.Easing.InOut()
 			}
 		)
 
-	}
+    }
 
-	private _onPressItem = (e: RX.Types.SyntheticEvent) => {
-		//e.stopPropagation();
-		console.log('PRESSED');
+	private _onPressItem(e: RX.Types.SyntheticEvent, key: string) {
+		e.stopPropagation();
+		this._animation = this._makeAnimation()
 		this._animation.start();
+        this._active = !this._active;
 	}
 
-	private _renderItem(item: MenuBlockItemInfo, hasFocus?: boolean) {
+	private _renderItem = (item: MenuBlockItemInfo, hasFocus?: boolean) => {
 		const viewStyle = RX.Styles.createViewStyle({
 			height: item.height
 		});
+        console.log(this);
 
 		return (
-			<RX.Animated.View style={[viewStyle]} onPress={this._onPressItem}>
-				<RX.View style={{flexDirection: "row", flex: 1}}
-			onPress={this._onPressItem}>
+			<RX.Button style={[_menublockViewStyle.base, _menublockTextStyle.base]} onPress={ (e) => {this._onPressItem(e, item.key)}}>
+				<RX.View style={{flexDirection: "row", flex: 1}}>
 					<RX.Animated.Image style={[_arrowViewStyle,
 						this._animationStyle]} source="src/resources/droparrow.png" />
 					<RX.Text style={{flex: 1}}>{item.text}</RX.Text>
 				</RX.View>
-			</RX.Animated.View>
+			</RX.Button>
 		);
 	}
 
     render() {
 		console.log(this.props);
         return (
-            <RX.View style={[_menublockViewStyle.base,
-				_menublockTextStyle.base]} onPress={this._onPressItem}>
+            <RX.View style={[_menublockViewStyle.layout, _menublockViewStyle.base,
+				_menublockTextStyle.base]}>
                 <RX.Text style={{paddingBottom:20}}>{this.props.headerText}</RX.Text>
 				<VirtualListView
 					itemList={this.props.items}
